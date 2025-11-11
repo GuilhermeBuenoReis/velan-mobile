@@ -11,20 +11,31 @@ class VelanApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Velan',
+      title: 'Velan Mobile',
       debugShowCheckedModeBanner: false,
       initialRoute: AppRoutes.login,
       routes: AppRoutes.routes,
       theme: ThemeData(
-        useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0B0B10),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6B5FD1),
-          brightness: Brightness.dark,
-        ),
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+        scaffoldBackgroundColor: const Color(0xFF0F0F0F),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: .06),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: .1),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: .1),
+            ),
+          ),
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: .4),
+          ),
         ),
       ),
     );

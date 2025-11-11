@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:velan_mobile/Screens/Auth/auth_layout.dart';
+import 'package:velan_mobile/Services/auth_service.dart';
+import 'package:velan_mobile/app_routes.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -9,20 +11,24 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final auth = AuthService();
+
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final typeController = TextEditingController();
-  final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
+  final passController = TextEditingController();
+  final confirmPassController = TextEditingController();
 
-  String role = 'patient';
-  bool showPassword = false;
+  bool showPass = false;
   bool showConfirm = false;
-  bool acceptTerms = false;
   bool loading = false;
-  bool successVisible = false;
+  bool acceptTerms = false;
+
+  String role = "patient";
+
   String? errorMessage;
+  bool successVisible = false;
 
   void handleRegister() async {
     setState(() {
@@ -31,48 +37,34 @@ class _RegisterPageState extends State<RegisterPage> {
       successVisible = false;
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      await auth.register(
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        phone: phoneController.text.trim(),
+        type: typeController.text.trim(),
+        role: role,
+        password: passController.text.trim(),
+        confirmPassword: confirmPassController.text.trim(),
+      );
 
-    if (nameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        phoneController.text.isEmpty ||
-        typeController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        confirmPasswordController.text.isEmpty) {
       setState(() {
-        errorMessage = 'Preencha todos os campos.';
-        loading = false;
+        successVisible = true;
       });
-      return;
-    }
 
-    if (passwordController.text != confirmPasswordController.text) {
-      setState(() {
-        errorMessage = 'As senhas precisam coincidir.';
-        loading = false;
-      });
-      return;
-    }
+      await Future.delayed(const Duration(seconds: 1));
 
-    if (!acceptTerms) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
+      }
+    } catch (e) {
       setState(() {
-        errorMessage = 'Você precisa aceitar os termos.';
-        loading = false;
+        errorMessage = e.toString().replaceAll("Exception:", "").trim();
       });
-      return;
     }
 
     setState(() {
       loading = false;
-      successVisible = true;
-    });
-
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          successVisible = false;
-        });
-      }
     });
   }
 
@@ -85,241 +77,183 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (errorMessage != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.red.withOpacity(.15),
+                  border: Border.all(color: Colors.redAccent),
+                ),
+                child: Text(
+                  errorMessage!,
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
+
             const SizedBox(height: 8),
-            const Text('Nome completo', style: TextStyle(color: Colors.white)),
+
+            const Text("Nome completo", style: TextStyle(color: Colors.white)),
             const SizedBox(height: 6),
             TextField(
               controller: nameController,
               decoration: InputDecoration(
                 hintText: 'Seu nome completo',
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: .06),
+                fillColor: Colors.white.withOpacity(.06),
               ),
             ),
+
             const SizedBox(height: 16),
-            const Text('E-mail', style: TextStyle(color: Colors.white)),
+
+            const Text("E-mail", style: TextStyle(color: Colors.white)),
             const SizedBox(height: 6),
             TextField(
               controller: emailController,
               decoration: InputDecoration(
                 hintText: 'seu@email.com',
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: .06),
+                fillColor: Colors.white.withOpacity(.06),
               ),
             ),
+
             const SizedBox(height: 16),
-            const Text('Telefone', style: TextStyle(color: Colors.white)),
+
+            const Text("Telefone", style: TextStyle(color: Colors.white)),
             const SizedBox(height: 6),
             TextField(
               controller: phoneController,
               decoration: InputDecoration(
                 hintText: '(00) 00000-0000',
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: .06),
+                fillColor: Colors.white.withOpacity(.06),
               ),
             ),
+
             const SizedBox(height: 16),
-            const Text('Tipo de usuário', style: TextStyle(color: Colors.white)),
+
+            const Text("Tipo de usuário", style: TextStyle(color: Colors.white)),
             const SizedBox(height: 6),
             TextField(
               controller: typeController,
               decoration: InputDecoration(
                 hintText: 'Ex.: Clínica especializada',
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: .06),
+                fillColor: Colors.white.withOpacity(.06),
               ),
             ),
+
             const SizedBox(height: 16),
-            const Text('Perfil de uso', style: TextStyle(color: Colors.white)),
+
+            const Text("Perfil de uso", style: TextStyle(color: Colors.white)),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .06),
+                color: Colors.white.withOpacity(.06),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: role,
-                  items: const [
-                    DropdownMenuItem(value: 'patient', child: Text('Paciente')),
-                    DropdownMenuItem(value: 'doctor', child: Text('Médico')),
-                    DropdownMenuItem(value: 'clinic', child: Text('Clínica')),
-                  ],
-                  onChanged: (v) {
-                    setState(() {
-                      role = v!;
-                    });
-                  },
                   dropdownColor: const Color(0xFF202020),
                   style: const TextStyle(color: Colors.white),
                   iconEnabledColor: Colors.white,
+                  items: const [
+                    DropdownMenuItem(
+                        value: "patient", child: Text("Paciente")),
+                    DropdownMenuItem(value: "doctor", child: Text("Médico")),
+                    DropdownMenuItem(value: "clinic", child: Text("Clínica")),
+                  ],
+                  onChanged: (v) {
+                    setState(() => role = v!);
+                  },
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
-            const Text('Senha', style: TextStyle(color: Colors.white)),
+
+            const Text("Senha", style: TextStyle(color: Colors.white)),
             const SizedBox(height: 6),
             Stack(
               alignment: Alignment.centerRight,
               children: [
                 TextField(
-                  controller: passwordController,
-                  obscureText: !showPassword,
+                  controller: passController,
+                  obscureText: !showPass,
                   decoration: InputDecoration(
                     hintText: 'Mínimo 8 caracteres',
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: .06),
+                    fillColor: Colors.white.withOpacity(.06),
                   ),
                 ),
                 IconButton(
+                  onPressed: () {
+                    setState(() => showPass = !showPass);
+                  },
                   icon: Icon(
-                    showPassword ? Icons.visibility_off : Icons.visibility,
+                    showPass ? Icons.visibility_off : Icons.visibility,
                     color: Colors.white70,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      showPassword = !showPassword;
-                    });
-                  },
                 ),
               ],
             ),
+
             const SizedBox(height: 16),
-            const Text('Confirmar senha', style: TextStyle(color: Colors.white)),
+
+            const Text("Confirmar senha",
+                style: TextStyle(color: Colors.white)),
             const SizedBox(height: 6),
             Stack(
               alignment: Alignment.centerRight,
               children: [
                 TextField(
-                  controller: confirmPasswordController,
+                  controller: confirmPassController,
                   obscureText: !showConfirm,
                   decoration: InputDecoration(
-                    hintText: 'Digite a senha novamente',
+                    hintText: 'Digite novamente',
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: .06),
+                    fillColor: Colors.white.withOpacity(.06),
                   ),
                 ),
                 IconButton(
+                  onPressed: () {
+                    setState(() => showConfirm = !showConfirm);
+                  },
                   icon: Icon(
                     showConfirm ? Icons.visibility_off : Icons.visibility,
                     color: Colors.white70,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      showConfirm = !showConfirm;
-                    });
-                  },
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Checkbox(
-                  value: acceptTerms,
-                  onChanged: (v) {
-                    setState(() {
-                      acceptTerms = v ?? false;
-                    });
-                  },
-                ),
-                Expanded(
-                  child: Text(
-                    'Aceito os termos de uso e políticas de privacidade.',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: .7),
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (errorMessage != null)
-              Container(
-                margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: Colors.redAccent.withValues(alpha: .3)),
-                  color: Colors.redAccent.withValues(alpha: .1),
-                ),
-                child: Text(
-                  errorMessage!,
-                  style:
-                  const TextStyle(color: Colors.redAccent, fontSize: 13),
-                ),
-              ),
+
             const SizedBox(height: 24),
+
             SizedBox(
               height: 48,
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: loading ? null : handleRegister,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Ink(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF6B5FD1),
-                        Color(0xFF4CA3B0),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: successVisible
-                        ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.check_circle, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(
-                          'Conta criada!',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    )
-                        : loading
-                        ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2),
-                    )
-                        : const Text(
-                      'Registrar-se',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16),
-                    ),
-                  ),
-                ),
+                child: loading
+                    ? const CircularProgressIndicator()
+                    : const Text("Registrar-se"),
               ),
             ),
-            const SizedBox(height: 24),
+
+            const SizedBox(height: 20),
+
             Center(
               child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, '/login');
-                },
+                onTap: () =>
+                    Navigator.pushReplacementNamed(context, AppRoutes.login),
                 child: const Text(
-                  'Já tem uma conta? Entre agora',
+                  "Já tem uma conta? Entre agora",
                   style: TextStyle(
-                    color: Color(0xFF4CA3B0),
-                    fontSize: 14,
-                    decoration: TextDecoration.underline,
-                  ),
+                      color: Color(0xFF4CA3B0),
+                      decoration: TextDecoration.underline),
                 ),
               ),
             ),
