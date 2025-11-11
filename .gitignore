@@ -1,0 +1,15 @@
+build/
+.dart_tool/
+.packages
+pubspec.lock
+.idea/
+.vscode/
+android/.gradle/
+android/.idea/
+android/local.properties
+ios/Pods/
+*.apk
+*.ipa
+*.so
+*.keystore
+*.jks
