@@ -13,7 +13,7 @@ class VelanApp extends StatelessWidget {
     return MaterialApp(
       title: 'Velan Mobile',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.login,
+      initialRoute: AppRoutes.welcome,
       routes: AppRoutes.routes,
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -23,19 +23,13 @@ class VelanApp extends StatelessWidget {
           fillColor: Colors.white.withValues(alpha: .06),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: .1),
-            ),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: .1)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: .1),
-            ),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: .1)),
           ),
-          hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: .4),
-          ),
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: .4)),
         ),
       ),
     );

@@ -42,6 +42,7 @@ class AuthService {
           'name': name,
           'email': email,
           'phone': phone,
+          
           'type': type,
           'role': role,
           'password': password,
