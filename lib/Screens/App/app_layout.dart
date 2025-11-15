@@ -27,6 +27,11 @@ class _AppLayoutState extends State<AppLayout> {
       icon: Icons.calendar_month,
       route: AppRoutes.appointment,
     ),
+    _NavItem(
+      label: 'Perfil',
+      icon: Icons.person_outline,
+      route: AppRoutes.profile,
+    ),
   ];
 
   @override
@@ -53,6 +58,18 @@ class _AppLayoutState extends State<AppLayout> {
   }
 
   Widget _buildSidebar(BuildContext context) {
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    final bool isProfileActive =
+        currentRoute == AppRoutes.profile || activeItem == 'Perfil';
+
+    void goToProfile() {
+      Navigator.of(context).pop();
+      setState(() => activeItem = 'Perfil');
+      if (currentRoute != AppRoutes.profile) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.profile);
+      }
+    }
+
     return Drawer(
       width: 260,
       child: Column(
@@ -63,7 +80,7 @@ class _AppLayoutState extends State<AppLayout> {
               children: [
                 CircleAvatar(
                   radius: 26,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: const Color(0xFFE8E7FF),
                   backgroundImage: const AssetImage('assets/velan-logo.png'),
                 ),
                 const SizedBox(width: 12),
@@ -78,11 +95,13 @@ class _AppLayoutState extends State<AppLayout> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: navItems.map((item) {
-                final isActive = item.label == activeItem;
+                final isActive =
+                    currentRoute == item.route || item.label == activeItem;
+                const inactiveColor = Color(0xFF9DA3B4);
                 return ListTile(
                   leading: Icon(
                     item.icon,
-                    color: isActive ? const Color(0xFF6B5FD1) : Colors.black54,
+                    color: isActive ? const Color(0xFF5B4DDC) : inactiveColor,
                   ),
                   title: Text(
                     item.label,
@@ -91,8 +110,8 @@ class _AppLayoutState extends State<AppLayout> {
                           ? FontWeight.bold
                           : FontWeight.normal,
                       color: isActive
-                          ? const Color(0xFF6B5FD1)
-                          : Colors.black87,
+                          ? const Color(0xFF5B4DDC)
+                          : inactiveColor,
                     ),
                   ),
                   onTap: () {
@@ -110,15 +129,44 @@ class _AppLayoutState extends State<AppLayout> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
-              children: const [
+              children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: Colors.black12,
-                  child: Icon(Icons.person, color: Colors.white),
+                  backgroundColor:
+                      isProfileActive ? const Color(0xFF5B4DDC) : Colors.black12,
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.white,
+                  ),
                 ),
-                SizedBox(height: 8),
-                Text('Meu Perfil', style: TextStyle(fontSize: 14)),
-                SizedBox(height: 20),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: goToProfile,
+                  icon: Icon(
+                    Icons.arrow_forward,
+                    color: isProfileActive
+                        ? const Color(0xFF5B4DDC)
+                        : const Color(0xFF9DA3B4),
+                  ),
+                  label: Text(
+                    'Meu Perfil',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isProfileActive
+                          ? const Color(0xFF5B4DDC)
+                          : const Color(0xFF9DA3B4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Gerencie suas informações.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54.withOpacity(.8),
+                  ),
+                ),
+                const SizedBox(height: 8),
               ],
             ),
           ),
