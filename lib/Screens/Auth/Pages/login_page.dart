@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
         passwordController.text.trim(),
       );
 
-      Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+      Navigator.pushReplacementNamed(context, AppRoutes.appointment);
     } catch (e) {
       setState(() {
         errorMessage = e.toString().replaceAll("Exception:", "").trim();

@@ -1,26 +1,11 @@
-import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
-import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:velan_mobile/Services/http_client.dart';
 
 class AuthService {
-  AuthService() {
-    dio.interceptors.add(CookieManager(_cookieJar));
-  }
+  AuthService() : _http = AppHttpClient.instance;
 
-  final Dio dio = Dio(
-    BaseOptions(
-      baseUrl: 'http://10.0.2.2:8000',
-      connectTimeout: const Duration(seconds: 8),
-      receiveTimeout: const Duration(seconds: 8),
-      validateStatus: (status) => status != null && status < 500,
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-    ),
-  );
-  final CookieJar _cookieJar = CookieJar();
-  bool _csrfInitialized = false;
+  final AppHttpClient _http;
+  Dio get dio => _http.dio;
 
   final String _defaultErrorMessage =
       'Não foi possível completar sua solicitação. Tente novamente.';
@@ -35,14 +20,13 @@ class AuthService {
     required String confirmPassword,
   }) async {
     try {
-      final headers = await _prepareSecureHeaders();
+      final headers = await _http.prepareSecureHeaders();
       final response = await dio.post(
         '/register',
         data: {
           'name': name,
           'email': email,
           'phone': phone,
-          
           'type': type,
           'role': role,
           'password': password,
@@ -55,7 +39,9 @@ class AuthService {
       );
 
       if (!_isSuccessStatus(response.statusCode)) {
-        throw Exception(_extractErrorMessage(response.data, response.statusCode));
+        throw Exception(
+          _extractErrorMessage(response.data, response.statusCode),
+        );
       }
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
@@ -64,7 +50,8 @@ class AuthService {
 
   Future<void> login(String email, String password) async {
     try {
-      final headers = await _prepareSecureHeaders();
+      _http.setAuthToken(null);
+      final headers = await _http.prepareSecureHeaders();
       final response = await dio.post(
         '/login',
         data: {
@@ -79,12 +66,66 @@ class AuthService {
 
       if (!_isSuccessStatus(response.statusCode)) {
         throw Exception(
-          _extractErrorMessage(response.data, response.statusCode,
-              explicit401Message: 'Credenciais inválidas'),
+          _extractErrorMessage(
+            response.data,
+            response.statusCode,
+            explicit401Message: 'Credenciais inválidas',
+          ),
         );
       }
+
+      final token = await _issueApiToken(email: email, password: password);
+      _http.setAuthToken(token);
     } on DioException catch (e) {
+      _http.setAuthToken(null);
       throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<String> _issueApiToken({
+    required String email,
+    required String password,
+  }) async {
+    final headers = await _http.prepareSecureHeaders();
+    try {
+      final response = await dio.post(
+        '/sanctum/token',
+        data: {
+          'email': email,
+          'password': password,
+          'device_name': 'velan_mobile_app',
+        },
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: headers,
+        ),
+      );
+
+      if (!_isSuccessStatus(response.statusCode)) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+        );
+      }
+
+      final token = response.data?.toString().trim();
+      if (token == null || token.isEmpty) {
+        throw const FormatException();
+      }
+      return token;
+    } on DioException catch (error) {
+      final response = error.response;
+      if (response != null && response.data != null) {
+        final message =
+            _extractErrorMessage(response.data, response.statusCode);
+        if (message.isNotEmpty) {
+          throw Exception(message);
+        }
+      }
+      throw Exception('Não foi possível gerar o token de acesso.');
+    } on FormatException {
+      throw Exception('Resposta inesperada ao gerar token de acesso.');
     }
   }
 
@@ -103,7 +144,7 @@ class AuthService {
     final response = error.response;
     if (response != null) {
       if (response.statusCode == 419) {
-        _csrfInitialized = false;
+        _http.invalidateCsrf();
         return 'Sessão expirada. Tente novamente.';
       }
       return _extractErrorMessage(response.data, response.statusCode);
@@ -145,15 +186,17 @@ class AuthService {
     }
 
     if (data is List) {
-      final joined = data.whereType<String>().map((e) => e.trim()).join('\n').trim();
+      final joined =
+          data.whereType<String>().map((e) => e.trim()).join('\n').trim();
       if (joined.isNotEmpty) {
         return joined;
       }
     }
 
     if (data is String && data.trim().isNotEmpty) {
-      final sanitized =
-          data.replaceAll(RegExp(r'<[^>]*>', multiLine: true, dotAll: true), '').trim();
+      final sanitized = data
+          .replaceAll(RegExp(r'<[^>]*>', multiLine: true, dotAll: true), '')
+          .trim();
       if (sanitized.isNotEmpty && sanitized != 'null') {
         return sanitized;
       }
@@ -168,42 +211,6 @@ class AuthService {
     }
 
     return _defaultErrorMessage;
-  }
-
-  Future<Map<String, String>> _prepareSecureHeaders() async {
-    await _ensureCsrfToken();
-    var token = await _readXsrfToken();
-    if (token == null) {
-      _csrfInitialized = false;
-      await _ensureCsrfToken();
-      token = await _readXsrfToken();
-    }
-    final headers = <String, String>{};
-    if (token != null) {
-      headers['X-XSRF-TOKEN'] = token;
-    }
-    return headers;
-  }
-
-  Future<void> _ensureCsrfToken() async {
-    if (_csrfInitialized) return;
-    try {
-      await dio.get('/sanctum/csrf-cookie');
-      _csrfInitialized = true;
-    } on DioException catch (e) {
-      throw Exception(_handleDioError(e));
-    }
-  }
-
-  Future<String?> _readXsrfToken() async {
-    final uri = Uri.parse(dio.options.baseUrl);
-    final cookies = await _cookieJar.loadForRequest(uri);
-    for (final cookie in cookies) {
-      if (cookie.name.toLowerCase() == 'xsrf-token') {
-        return Uri.decodeComponent(cookie.value);
-      }
-    }
-    return null;
   }
 
   bool _isSuccessStatus(int? statusCode) {

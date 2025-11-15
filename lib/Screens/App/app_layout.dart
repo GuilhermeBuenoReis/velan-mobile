@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:velan_mobile/app_routes.dart';
 
 class AppLayout extends StatefulWidget {
   final Widget child;
   final List<String>? breadcrumbs;
+  final Widget? floatingActionButton;
 
   const AppLayout({
     super.key,
     required this.child,
     this.breadcrumbs,
+    this.floatingActionButton,
   });
 
   @override
@@ -16,12 +19,14 @@ class AppLayout extends StatefulWidget {
 
 class _AppLayoutState extends State<AppLayout> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  String activeItem = 'Início';
+  String activeItem = 'Consultas';
 
-  final List<_NavItem> navItems = [
-    _NavItem(label: 'Início', icon: Icons.home, route: '/dashboard'),
-    _NavItem(label: 'Consultas', icon: Icons.calendar_month, route: '/appointment'),
-    _NavItem(label: 'Configurações', icon: Icons.settings, route: '/profile'),
+  final List<_NavItem> navItems = const [
+    _NavItem(
+      label: 'Consultas',
+      icon: Icons.calendar_month,
+      route: AppRoutes.appointment,
+    ),
   ];
 
   @override
@@ -42,6 +47,7 @@ class _AppLayoutState extends State<AppLayout> {
         title: _buildBreadcrumbs(),
       ),
       body: widget.child,
+      floatingActionButton: widget.floatingActionButton,
       backgroundColor: const Color(0xFFF5F5F7),
     );
   }
@@ -63,11 +69,8 @@ class _AppLayoutState extends State<AppLayout> {
                 const SizedBox(width: 12),
                 const Text(
                   'Velan',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ),
@@ -84,16 +87,20 @@ class _AppLayoutState extends State<AppLayout> {
                   title: Text(
                     item.label,
                     style: TextStyle(
-                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                      color: isActive ? const Color(0xFF6B5FD1) : Colors.black87,
+                      fontWeight: isActive
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isActive
+                          ? const Color(0xFF6B5FD1)
+                          : Colors.black87,
                     ),
                   ),
                   onTap: () {
-                    setState(() {
-                      activeItem = item.label;
-                    });
-                    Navigator.of(context).pushNamed(item.route);
-                    Navigator.pop(context);
+                    Navigator.of(context).pop();
+                    setState(() => activeItem = item.label);
+                    if (ModalRoute.of(context)?.settings.name != item.route) {
+                      Navigator.of(context).pushReplacementNamed(item.route);
+                    }
                   },
                 );
               }).toList(),
@@ -110,14 +117,11 @@ class _AppLayoutState extends State<AppLayout> {
                   child: Icon(Icons.person, color: Colors.white),
                 ),
                 SizedBox(height: 8),
-                Text(
-                  'Meu Perfil',
-                  style: TextStyle(fontSize: 14),
-                ),
+                Text('Meu Perfil', style: TextStyle(fontSize: 14)),
                 SizedBox(height: 20),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -135,17 +139,14 @@ class _AppLayoutState extends State<AppLayout> {
         for (int i = 0; i < crumbs.length; i++) ...[
           Text(
             crumbs[i],
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
           ),
           if (i < crumbs.length - 1)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 6),
               child: Icon(Icons.chevron_right, size: 18),
-            )
-        ]
+            ),
+        ],
       ],
     );
   }
