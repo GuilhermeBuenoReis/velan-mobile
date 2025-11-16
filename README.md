@@ -1,110 +1,173 @@
-Velan Mobile
+# 📱 Velan Mobile
 
-Aplicativo mobile desenvolvido com Flutter para consumo da API do Velan (Laravel), focado em consulta/agendamento de appointments.
+Aplicativo **Flutter** integrado à **API do Velan (Laravel)**, desenvolvido para **gerenciamento de consultas médicas (appointments)**.  
+O app oferece fluxo completo de autenticação, visualização de agenda, criação de consultas e edição de perfil do usuário.
 
-Objetivo
+---
 
-Criar um app individual que demonstre domínio de Flutter, integração com API externa e múltiplas telas funcionais.
-O Velan Mobile oferece aos usuários a capacidade de agendar consultas, visualizar um calendário de appointments, editar detalhes e gerenciar compromissos via API.
+## 🎯 Objetivo do Projeto
 
-Funcionalidades
+Demonstrar domínio no desenvolvimento mobile com Flutter, utilizando arquitetura modular e integração com API externa.  
+O Velan Mobile centraliza o gerenciamento de consultas e perfis de pacientes de forma moderna, rápida e intuitiva.
 
-Visualização de calendário por mês/dia, com destaques para dias com appointments
+---
 
-Listagem de appointments de um dia selecionado
+## ⚙️ Funcionalidades
 
-Criação de novos appointments com campos como título, data, hora, tipo de consulta, local, profissional, notas
+- 🔐 **Autenticação completa** (login / cadastro)
+    
+- 🏠 **Tela Welcome** com introdução e acesso rápido
+    
+- 📅 **Agendamento de consultas** (Appointment Page)
+    
+- 👤 **Tela de Perfil** do usuário
+    
+- 🧭 **Navegação entre rotas** centralizada em `app_routes.dart`
+    
+- 🎨 **Layouts reutilizáveis** (`app_layout.dart`, `auth_layout.dart`)
+    
+- ⚙️ **Estrutura modular**, separando telas, contextos e widgets
+    
 
-Edição e visualização de detalhes de appointments existentes
+---
 
-Integração com API REST do Velan para leitura, criação e atualização de dados de appointments
+## 🖼️ Telas e Páginas
 
-Telas
-Tela	Função
-HomeScreen	Tela inicial com navegação para funcionalidades principais
-CalendarScreen	Exibe calendário completo e permite seleção de dias com appointments
-CreateAppointmentScreen	Formulário para criação de novo appointment
-AppointmentDetailsScreen	Exibe todos os dados de um appointment e permite edição/modificação
-Arquitetura e Organização de Código
+|Tela|Caminho|Descrição|
+|---|---|---|
+|**WelcomePage**|`Screens/App/Pages/Welcome/welcome_page.dart`|Apresentação inicial e acesso a login ou registro|
+|**LoginPage**|`Screens/Auth/Pages/login_page.dart`|Tela de autenticação com campos de e-mail e senha|
+|**RegisterPage**|`Screens/Auth/Pages/register_page.dart`|Criação de nova conta de usuário|
+|**AppointmentPage**|`Screens/App/Pages/Appointment/appointment_page.dart`|Listagem e criação de consultas agendadas|
+|**ProfilePage**|`Screens/App/Pages/Profile/profile_page.dart`|Exibição e edição das informações do usuário|
+
+---
+
+## 🧩 Estrutura de Pastas
+
+```
 lib/
-├── context/
-│   └── calendar-context.dart        ← Gerenciamento de estado e appointments
-├── screens/
-│   ├── home_screen.dart
-│   ├── calendar_screen.dart
-│   ├── create_event_screen.dart     ← (ou create_appointment_screen.dart conforme nomenclatura)
-│   └── event_details_screen.dart    ← (ou appointment_details_screen.dart conforme nomenclatura)
-├── widgets/
-│   ├── month_view.dart
-│   ├── day_view.dart
-│   └── event_card.dart               ← representa visualização de appointment
-└── types/
-    └── event.dart                    ← (ou appointment.dart conforme nomenclatura)
+├── Models/                        # Modelos de dados
+├── Screens/
+│   ├── App/
+│   │   ├── Appointment/
+│   │   │   ├── Contexts/          # Lógica e estado de appointments
+│   │   │   └── Widgets/           # Componentes visuais reutilizáveis
+│   │   │       └── appointment_page.dart
+│   │   ├── Profile/
+│   │   │   └── profile_page.dart
+│   │   └── Welcome/
+│   │       ├── Widgets/
+│   │       │   └── welcome_page.dart
+│   │       └── app_layout.dart
+│   └── Auth/
+│       ├── Pages/
+│       │   ├── login_page.dart
+│       │   └── register_page.dart
+│       └── Widgets/
+│           └── auth_layout.dart
+├── Services/
+│   └── utils/
+│       └── app_routes.dart        # Gerencia todas as rotas da aplicação
+├── main.dart
+```
 
-Integração com API
+---
 
-O app consome endpoints REST da API do Velan:
+## 🚏 Sistema de Rotas
 
-GET /appointments — lista todos os appointments
+Gerenciado em `lib/Services/utils/app_routes.dart`.
 
-GET /appointments/:id — obtém detalhes de appointment
+```dart
+class AppRoutes {
+  static const welcome = '/welcome';
+  static const login = '/login';
+  static const register = '/register';
+  static const appointment = '/appointment';
+  static const profile = '/profile';
 
-POST /appointments — cria novo appointment
-
-PUT /appointments/:id — atualiza appointment existente
-
-Exemplo de objeto de appointment:
-
-{
-  "id": 1,
-  "title": "Consulta de Revisão",
-  "date": "2025-11-20",
-  "time": "10:30",
-  "type": "Revisão",
-  "location": "Clínica Central",
-  "professional": "Dr. Silva",
-  "notes": "Levar exames"
+  static Map<String, WidgetBuilder> routes = {
+    welcome: (_) => const WelcomePage(),
+    login: (_) => const LoginPage(),
+    register: (_) => const RegisterPage(),
+    appointment: (_) => const AppointmentPage(),
+    profile: (_) => const ProfilePage(),
+  };
 }
+```
 
-Tecnologias Utilizadas
+---
 
-Flutter (Dart)
+## 🌐 Integração com API Velan
 
-Material Design / UI responsiva
+O app consome endpoints REST do Velan Laravel para cadastro de usuários e agendamento de consultas.
 
-Gerenciamento de estado via Context customizado
+|Método|Endpoint|Função|
+|---|---|---|
+|`POST`|`/login`|Autenticação|
+|`POST`|`/register`|Registro de novo usuário|
+|`GET`|`/appointments`|Listar consultas|
+|`POST`|`/appointments`|Criar nova consulta|
+|`PUT`|`/appointments/:id`|Atualizar consulta|
+|`GET`|`/profile`|Buscar dados do usuário|
 
-Widgets personalizados (MonthView, DayView, EventCard)
+---
 
-Animações e transições suaves via pacote de motion
+## 🛠️ Tecnologias Utilizadas
 
-Integração com API externa (Velan Laravel) para persistência de dados de appointments
+- **Flutter (Dart)** – framework principal
+    
+- **Material Design** – UI padrão Google
+    
+- **Arquitetura modular** – divisão por domínio (Auth, App, Profile, Welcome)
+    
+- **Context API customizada** – controle de estado local
+    
+- **Integração com Laravel API** – consumo via HTTP
+    
+- **Widgets personalizados** – para reutilização de componentes
+    
 
-Instalação e Execução
+---
 
-Clone o repositório
+## ▶️ Como Executar
 
+```bash
+# Clone o repositório
 git clone https://github.com/GuilhermeBuenoReis/velan-mobile.git
 cd velan-mobile
 
-
-Instale as dependências
-
+# Instale dependências
 flutter pub get
 
+# Configure o endpoint da API em seus arquivos de serviço
 
-Configure a URL base da API no arquivo de requisições
-
-Execute o app
-
+# Execute o app
 flutter run
+```
 
-Autor
+---
 
-Guilherme Bueno Reis
-Desenvolvedor Fullstack & Mobile
-GitHub: https://github.com/GuilhermeBuenoReis
+## 👨‍💻 Autor
 
-Considerações Finais
+**Guilherme Bueno Reis**  
+Desenvolvedor Fullstack & Mobile  
+📧 [guilhermebuenoreis.contact@gmail.com](mailto:guilhermebuenoreis.contact@gmail.com)  
+🌐 [github.com/GuilhermeBuenoReis](https://github.com/GuilhermeBuenoReis)
 
-O Velan Mobile foi desenvolvido individualmente e demonstra integração entre frontend mobile e backend via API, além de uma fluida interface para gerenciamento de consultas/appointments com múltiplas telas e funcionalidades completas.
+---
+
+## 🎓 Considerações Finais
+
+O **Velan Mobile** foi desenvolvido individualmente para a disciplina de **Programação para Dispositivos Móveis**, cumprindo todos os requisitos:
+
+- Uso de **Flutter**
+    
+- Integração com API externa (Laravel)
+    
+- Quatro ou mais telas distintas
+    
+- Estrutura modular e navegação com rotas
+    
+
+O projeto reflete boas práticas de arquitetura, usabilidade e integração entre **frontend mobile** e **backend Laravel**.
